@@ -1,0 +1,307 @@
+{
+	"name": "DataFile",
+	"properties": {
+		"description": "Analogue Meter Data",
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "753fdf66-5f48-4c33-8d55-e3f2ee17d036"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"**Load The AMR Data**"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "python"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%pyspark\r\n",
+					"AMRaw = spark.read.load('abfss://data@wendydlstorage.dfs.core.windows.net/P6523_Verbruiken_AMR_GEMEENTE_202208.csv', format='csv'\r\n",
+					"## If header exists uncomment line below\r\n",
+					",delimiter= ';'\r\n",
+					", header=True\r\n",
+					")\r\n",
+					"display(AMRaw.limit(10))"
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"**COPY REQUIRED COLUMNS TO A NEW DATAFRAME and SHOW (ANALOG DATA)**"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"amr = AMRaw.select(AMRaw.Trekkingsdatum,AMRaw.Peildatum,AMRaw.Markt, \"Leveringsadres_Postcode\",\"Leveringsadres_Gemeente\",\"WerkelijkVerbruik_RM_2017\",\"BenaderendVerbruik_VM_2017\",\"Perc_Delta_VM_2017vsRM\",\"WerkelijkVerbruik_RM_2018\",\"BenaderendVerbruik_VM_2018\",\"Perc_Delta_VM_2018vsRM\",\"WerkelijkVerbruik_RM_2019\",\"BenaderendVerbruik_VM_2019\",\"Perc_Delta_VM_2019vsRM\",\"WerkelijkVerbruik_RM_2020\",\"BenaderendVerbruik_VM_2020\",\"Perc_Delta_VM_2020vsRM\",\"WerkelijkVerbruik_RM_2021\",\"BenaderendVerbruik_VM_2021\",\"Perc_Delta_VM_2021vsRM\")\r\n",
+					"#amr.show()\r\n",
+					"display(amr.limit(10))"
+				],
+				"execution_count": 12
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"**Load The DM Data**"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"DMRaw = spark.read.load('abfss://data@wendydlstorage.dfs.core.windows.net/P6523_Verbruiken_DM_GEMEENTE_202208.csv', format='csv'\r\n",
+					"## If header exists uncomment line below\r\n",
+					",delimiter= ';'\r\n",
+					", header=True\r\n",
+					")\r\n",
+					"display(DMRaw.limit(10))"
+				],
+				"execution_count": 13
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"**COPY REQUIRED COLUMNS TO A NEW DATAFRAME and SHOW (Digital Meter)**"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"dm = DMRaw.select(DMRaw.Trekkingsdatum,DMRaw.Peildatum,DMRaw.Markt, \"Leveringsadres_Postcode\",\"Leveringsadres_Gemeente\",\"WerkelijkVerbruik_RM_2017\",\"BenaderendVerbruik_VM_2017\",\"BenaderendVerbruik_VM_2017_Norm\",\"Perc_Delta_VM_2017vsRM\",\"WerkelijkVerbruik_RM_2018\",\"BenaderendVerbruik_VM_2018\",\"BenaderendVerbruik_VM_2018_Norm\",\"Perc_Delta_VM_2018vsRM\",\"WerkelijkVerbruik_RM_2019\",\"BenaderendVerbruik_VM_2019\",\"BenaderendVerbruik_VM_2019_Norm\",\"Perc_Delta_VM_2019vsRM\",\"WerkelijkVerbruik_RM_2020\",\"BenaderendVerbruik_VM_2020\",\"BenaderendVerbruik_VM_2020_Norm\",\"Perc_Delta_VM_2020vsRM\",\"WerkelijkVerbruik_RM_2021\",\"BenaderendVerbruik_VM_2021\",\"BenaderendVerbruik_VM_2021_Norm\",\"Perc_Delta_VM_2021vsRM\")\r\n",
+					"#dmr.show()\r\n",
+					"display(dm.limit(10))"
+				],
+				"execution_count": 14
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"**WRITE DATA TO 'SILVER LAYER'**"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"#Create Save Folder Path\r\n",
+					"container = 'data'\r\n",
+					"dlstorage = 'wendydlstorage'\r\n",
+					"folder = 'Silver'\r\n",
+					"#month = '2022_08'\r\n",
+					"amrfile= 'amr'\r\n",
+					"dmfile= 'dm'\r\n",
+					"#AMRraw = spark.read.load('abfss://' + container + '@' + dlstorage + '.dfs.core.windows.net/' + filename,\r\n",
+					"\r\n",
+					"#Analog Data\r\n",
+					"amroutput = 'abfss://' + container + '@' + dlstorage + '.dfs.core.windows.net/' + folder + '/' + amrfile\r\n",
+					"amr.write.csv(amroutput, mode='overwrite',header=True,)\r\n",
+					"print ('AM data saved as amr_data to ' + folder + ' folder')\r\n",
+					"\r\n",
+					"#Digital Data\r\n",
+					"dmoutput = 'abfss://' + container + '@' + dlstorage + '.dfs.core.windows.net/' + folder + '/' + dmfile\r\n",
+					"dm.write.csv(dmoutput, mode='overwrite',header=True)\r\n",
+					"print (' DM data saved as dm_data to ' + folder + ' folder')"
+				],
+				"execution_count": 20
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"amr.write.csv(amroutput, mode='overwrite').saveAsTable('amrtable1')\r\n",
+					"from pyspark.sql import SparkSession \r\n",
+					"from pyspark.sql.types import * \r\n",
+					"\r\n",
+					"# Primary storage info \r\n",
+					"account_name = 'Your primary storage account name' # fill in your primary account name \r\n",
+					"container_name = 'Your container name' # fill in your container name \r\n",
+					"relative_path = 'Your relative path' # fill in your relative folder path \r\n",
+					"\r\n",
+					"adls_path = 'abfss://%s@%s.dfs.core.windows.net/%s' % (container_name, account_name, relative_path) \r\n",
+					"print('Primary storage account path: ' + adls_path) \r\n",
+					"\r\n",
+					"data = spark.range(5,10) \r\n",
+					"\r\n",
+					"# Write spark dataframe as a csv file \r\n",
+					"csv_path = adls_path + 'Your file name ' \r\n",
+					"data.write.csv(csv_path, mode = 'overwrite', header = 'true') \r\n",
+					"\r\n",
+					"# Write spark dataframe as a parquet file \r\n",
+					"parquet_path = adls_path + ' Your file name ' \r\n",
+					"data.write.parquet(parquet_path, mode = 'overwrite') \r\n",
+					"\r\n",
+					"# Write spark dataframe as a json file \r\n",
+					"json_path = adls_path + 'Your file name ' \r\n",
+					"data.write.json(json_path, mode = 'overwrite')"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"help(spark.write)"
+				],
+				"execution_count": 16
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				],
+				"execution_count": null
+			}
+		]
+	}
+}
